@@ -1,4 +1,3 @@
-
 // Programa para construir a matriz de adjacência de um grafo não direcionado
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,32 +49,43 @@ int main() {
     } else {
         // Ajusta para índice base 0
         u--; v--;
-        // Algoritmo BFS para encontrar o menor caminho entre u e v
-        int *visitado = calloc(n, sizeof(int)); // Vetor de visitados
-        int *dist = calloc(n, sizeof(int));     // Vetor de distâncias
-        int *fila = malloc(n * sizeof(int));    // Fila para BFS
-        int ini = 0, fim = 0;
-        fila[fim++] = u; // Insere vértice inicial na fila
-        visitado[u] = 1;
-        dist[u] = 0;
-        while (ini < fim) {
-            int atual = fila[ini++];
-            // Para cada vizinho do vértice atual
-            for (int i = 0; i < n; i++) {
-                // Se existe aresta e não foi visitado
-                if (matriz[atual][i] && !visitado[i]) {
-                    visitado[i] = 1;
-                    dist[i] = dist[atual] + 1;
-                    fila[fim++] = i;
-                }
+        // Multiplicação sucessiva da matriz de adjacência
+        int **potencia = malloc(n * sizeof(int*));
+        int **aux = malloc(n * sizeof(int*));
+        for (int i = 0; i < n; i++) {
+            potencia[i] = calloc(n, sizeof(int));
+            aux[i] = calloc(n, sizeof(int));
+            for (int j = 0; j < n; j++) {
+                potencia[i][j] = matriz[i][j];
             }
         }
-        // Exibe a menor quantidade de arestas entre os vértices informados
-        printf("Menor quantidade de arestas entre %d e %d: %d\n", u+1, v+1, dist[v]);
-        // Libera memória usada pelo BFS
-        free(visitado);
-        free(dist);
-        free(fila);
+        int caminho = 1;
+        int encontrado = potencia[u][v];
+        while (!encontrado && caminho < n) {
+            // Multiplica potencia = potencia * matriz
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    aux[i][j] = 0;
+                    for (int k = 0; k < n; k++) {
+                        aux[i][j] += potencia[i][k] * matriz[k][j];
+                    }
+                }
+            }
+            // Copia aux para potencia
+            for (int i = 0; i < n; i++)
+                for (int j = 0; j < n; j++)
+                    potencia[i][j] = aux[i][j];
+            caminho++;
+            encontrado = potencia[u][v];
+        }
+        printf("Menor quantidade de arestas entre %d e %d: %d\n", u+1, v+1, caminho);
+        // Libera memória usada
+        for (int i = 0; i < n; i++) {
+            free(potencia[i]);
+            free(aux[i]);
+        }
+        free(potencia);
+        free(aux);
     }
 
     // Libera memória da matriz de adjacência
